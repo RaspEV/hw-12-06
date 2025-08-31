@@ -33,15 +33,42 @@ Slave - копия мастера с ограниченными правами. 
 
 ### Решение к заданию 2:
 
----
+Выполнение через docker-compose файл по [ссылке](files/docker-compose.yml).
 
-## Дополнительные задания (со звёздочкой*)
-Эти задания дополнительные, то есть не обязательные к выполнению, и никак не повлияют на получение вами зачёта по этому домашнему заданию. Вы можете их выполнить, если хотите глубже шире разобраться в материале.
+- Конфиг mysql-master по [ссылке my1.cnf](files/master/my1.cnf)
+- Конфиг mysql-slave по [ссылке my2.cnf](files/slave/my2.cnf)
 
----
+Подняты два контенера:
+- mysql-master
+- mysql-slave
 
-### Задание 3* 
+Сеть между контейнерами "mysql-replication"
 
-Выполните конфигурацию master-master репликации. Произведите проверку.
+##### Контейнеры запущены
+![Контейнеры запущены](images/img1.png)
 
-*Приложите скриншоты конфигурации, выполнения работы: состояния и режимы работы серверов.*
+Входим на сервер master и cоздаём пользователя для репликации:
+```sql
+CREATE USER 'repl_user'@'%' IDENTIFIED BY 'repl_password';
+GRANT REPLICATION SLAVE ON *.* TO 'repl_user'@'%';
+FLUSH PRIVILEGES;
+```
+Проверка статуса Master:
+```sql
+SHOW MASTER STATUS;
+```
+##### Проверка статуса Master
+![Проверка статуса Master](images/img2.png)
+
+Входим на сервер slave и настраевываем репликацию:
+```sql
+CHANGE MASTER TO
+MASTER_HOST='mysql-master',
+MASTER_USER='repl_user',
+MASTER_PASSWORD='repl_password',
+MASTER_LOG_FILE='mysql-bin.000003',
+MASTER_LOG_POS=1322;
+```
+##### Проверка статуса Slave
+![Проверка статуса Slave](images/img3.png)
+
